@@ -1,0 +1,11 @@
+{
+  "BASE_URL": "http://starwars.nihey.org",
+  "SCP_SETTINGS": {
+    "port": 22,
+    "host": "nihey.org",
+    "username": "nihey",
+    "privateKey": "/home/nihey/.ssh/id_rsa"
+  },
+  "ADMIN_EMAILS": ["nihey.takizawa@gmail.com", "brorlandi@gmail.com"],
+  "MAILER_URL": "https://script.google.com/macros/xxx"
+}

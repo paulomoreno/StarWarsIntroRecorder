@@ -4,5 +4,8 @@
 # Dependencies
 node_modules/
 
+# Production config
+config/production.json
+
 # Built files
 dist/

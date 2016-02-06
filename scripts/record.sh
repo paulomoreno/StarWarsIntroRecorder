@@ -15,7 +15,7 @@ set -e
 CREATOR_PATH=$(cat ./config/creator-path.txt)
 
 # Gather all necessary screenshots
-LOG=$(./bin/screenshooter.js K9iNc3zvbplHnHbmi8W --creator-path=$CREATOR_PATH/public/index.html --engine=slimerjs)
+LOG=$(./bin/screenshooter.js $1 --creator-path=$CREATOR_PATH/public/index.html --engine=slimerjs)
 
 # Extract data needed to generate the videos
 FPS_INTRO=$(grep __FRAMES_PER_SECOND_0__ <<< "$LOG" | sed -e "s/__FRAMES_PER_SECOND_0__: //g")
@@ -37,6 +37,8 @@ echo "ENDING FPS: $FPS_ENDING"
 echo ""
 echo ""
 
+set +v
+
 # Generate intro video
 ffmpeg -framerate $FPS_INTRO -i $SCREENSHOT_DIR/$1-0-%d.png -c:v libx264 -pix_fmt yuv420p $RENDERING_DIR/$1-intro.mp4
 # Generate logo video
@@ -55,8 +57,6 @@ ffmpeg -i $RENDERING_DIR/$1-combined.mp4 -i assets/audio/intro.mp3 -c copy -map 
 # Move the file to the video directory
 mv $RENDERING_DIR/$1-final.mp4 $VIDEO_DIR/$1.mp4
 
-# Do not flood the stdout with removal data
-set +v
 # Remove all screenshots and rendering leftovers
 rm $RENDERING_DIR/$1* $SCREENSHOT_DIR/$1*
 set -v
