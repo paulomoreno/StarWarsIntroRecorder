@@ -22,6 +22,7 @@ app.get('/status', function (request, response) {
 
   response.send({
     queue: status.queue,
+    isQueued: (status.request ? true : false),
   });
 });
 
