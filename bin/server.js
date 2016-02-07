@@ -12,6 +12,7 @@ var scheduler = new Scheduler(1);
 
 app.get('/status', function (request, response) {
   logger('GET', '/status', request.query);
+  response.header('Access-Control-Allow-Origin', '*');
 
   var code = request.query.code;
   var status = scheduler.status(code);
@@ -26,6 +27,7 @@ app.get('/status', function (request, response) {
 
 app.get('/video-request', function (request, response) {
   logger('GET', '/video-request', request.query);
+  response.header('Access-Control-Allow-Origin', '*');
 
   // First, check if all data that is needed to build the video is here
   let code = request.query.code;
