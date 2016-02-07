@@ -13,8 +13,14 @@ var scheduler = new Scheduler(1);
 app.get('/status', function (request, response) {
   logger('GET', '/status', request.query);
 
+  var code = request.query.code;
+  var status = scheduler.status(code);
+  if (!status.request && Utils.fileExists(`./dist/videos/${code}.mp4`)) {
+    return response.send({url: `${Config.BASE_URL}/${code}.mp4`});
+  }
+
   response.send({
-    queue: scheduler.status(request.query.code).queue,
+    queue: status.queue,
   });
 });
 
