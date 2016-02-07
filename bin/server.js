@@ -30,12 +30,6 @@ app.get('/video-request', function (request, response) {
     return response.status(400).send({error: 'missing_code'});
   }
 
-  // If the file already exists, send its URL
-  if (Utils.fileExists(`./dist/videos/${code}.mp4`)) {
-    logger(`${code} already rendered`);
-    return response.send({url: `${Config.BASE_URL}/${code}.mp4`});
-  }
-
   var status = scheduler.status(code);
   if (status.request) {
     // If the request is already being processed add the user to the mailing
@@ -45,6 +39,12 @@ app.get('/video-request', function (request, response) {
       status.request.emails.push(email);
     }
     return response.send({queue: status.queue});
+  }
+
+  // If the file already exists, send its URL
+  if (Utils.fileExists(`./dist/videos/${code}.mp4`)) {
+    logger(`${code} already rendered`);
+    return response.send({url: `${Config.BASE_URL}/${code}.mp4`});
   }
 
   scheduler.add({code: code, emails: [email]});
