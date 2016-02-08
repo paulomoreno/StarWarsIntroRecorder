@@ -10,6 +10,42 @@ var Utils = require('../lib/utils');
 var app = express();
 var scheduler = new Scheduler(1);
 
+app.get('/expressify', function (request, response) {
+  logger('GET', '/expressify', request.query);
+  response.header('Access-Control-Allow-Origin', '*');
+
+  if (request.query.auth !== Config.AUTH) {
+    return response.status(401).send('not_authorized');
+  }
+
+  if (!request.query.email && !request.query.code) {
+    return response.status(400).send('missing_email_and_code');
+  }
+
+  // Use forEach to find the last code related to that e-mail (cannot use
+  // [].find)
+  var code = request.query.code;
+  code || scheduler.renderers.forEach(function(renderer) {
+    renderer.queue.forEach(function(r) {
+      if (r.emails.indexOf(request.query.email) !== -1) {
+        code = r.code;
+      }
+    });
+  });
+
+  if (!code) {
+    return response.status(400).send('missing_code_related_to_email');
+  }
+
+  // Expressify the code and return the user new position on the queue
+  logger('expressifying', code);
+  scheduler.expressify(code);
+  var status = scheduler.status(code);
+  response.send({
+    queue: status.queue,
+  });
+});
+
 app.get('/status', function (request, response) {
   logger('GET', '/status', request.query);
   response.header('Access-Control-Allow-Origin', '*');

@@ -6,6 +6,7 @@
     "username": "nihey",
     "privateKey": "/home/nihey/.ssh/id_rsa"
   },
+  "AUTH": "BeastsAllOverTheShop",
   "ADMIN_EMAILS": ["nihey.takizawa@gmail.com", "brorlandi@gmail.com"],
   "MAILER_URL": "https://script.google.com/macros/xxx"
 }
