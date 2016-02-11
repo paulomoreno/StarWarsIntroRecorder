@@ -1,8 +1,12 @@
 # vim temporary files
 *.sw*
 
+# pyc
+*.pyc
+
 # Dependencies
 node_modules/
+balancer/env/
 
 # Production config
 config/production.json

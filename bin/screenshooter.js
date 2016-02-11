@@ -6,7 +6,7 @@ var config = {
     width: 1280,
     height: 720,
   },
-  timeFactor: 1,
+  timeFactor: 20,
   sync: [
     9,
     9,

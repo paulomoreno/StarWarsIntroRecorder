@@ -6,75 +6,71 @@ var express = require('express');
 var Scheduler = require('../lib/scheduler');
 var logger = require('../lib/logger');
 var Utils = require('../lib/utils');
+require('../lib/decorators');
 
 var app = express();
 var scheduler = new Scheduler(1);
 
-app.get('/expressify', function (request, response) {
-  logger('GET', '/expressify', request.query);
-  response.header('Access-Control-Allow-Origin', '*');
-
-  if (request.query.auth !== Config.AUTH) {
-    return response.status(401).send('not_authorized');
-  }
-
-  if (!request.query.email && !request.query.code) {
-    return response.status(400).send('missing_email_and_code');
-  }
-
-  // Use forEach to find the last code related to that e-mail (cannot use
-  // [].find)
+// Bump a code in the queue to the first available position
+app.get('/bump', function (request, response) {
   var code = request.query.code;
-  code || scheduler.renderers.forEach(function(renderer) {
-    renderer.queue.forEach(function(r) {
-      if (r.emails.indexOf(request.query.email) !== -1) {
-        code = r.code;
+  var element = scheduler.status(code);
+
+  if (!element.request) {
+    return response.status(404).send('code_not_found');
+  }
+
+  if (element.request.express) {
+    return response.status(200).send('already_expressified');
+  }
+
+  // Expressify the code and return the user's new position on the queue
+  logger('expressifying', code);
+  scheduler.expressify(code);
+  var status = scheduler.status(code);
+
+  response.send({queue: status.queue});
+}.request().authenticated().has('code'));
+
+// remove a code from the queue
+app.get('/bounce', function (request, response) {
+  var indexes = null;
+  scheduler.renderers.forEach(function(renderer, i) {
+    renderer.queue.forEach(function(r, j) {
+      if (r.code === request.query.code) {
+        indexes = [i, j];
       }
     });
   });
 
-  if (!code) {
-    return response.status(400).send('missing_code_related_to_email');
+  if (!indexes) {
+    return response.status(404).send('code_not_found');
   }
 
-  // Expressify the code and return the user new position on the queue
-  logger('expressifying', code);
-  scheduler.expressify(code);
-  var status = scheduler.status(code);
-  response.send({
-    queue: status.queue,
+  var code = scheduler.renderers[indexes[0]].queue.splice(indexes[1], 1);
+  response.send(code[0]);
+}.request().authenticated());
+
+// Serve the whole queue status
+app.get('/queue', function (request, response) {
+  var queues = scheduler.renderers.map(function(renderer) {
+    return {
+      processing: renderer.processing,
+      queue: renderer.queue,
+    };
   });
-});
+  response.send(queues);
+}.request().authenticated());
 
 app.get('/status', function (request, response) {
-  logger('GET', '/status', request.query);
-  response.header('Access-Control-Allow-Origin', '*');
+  var status = scheduler.status(request.query.code);
+  response.send({queue: status.queue});
+}.request().authenticated());
 
-  var code = request.query.code;
-  var status = scheduler.status(code);
-  if (!status.request && Utils.fileExists(`./dist/videos/${code}.mp4`)) {
-    return response.send({url: `${Config.BASE_URL}/${code}.mp4`});
-  }
-
-  response.send({
-    queue: status.queue,
-    isQueued: (status.request ? true : false),
-  });
-});
-
-app.get('/video-request', function (request, response) {
-  logger('GET', '/video-request', request.query);
-  response.header('Access-Control-Allow-Origin', '*');
-
+app.get('/request', function (request, response) {
   // First, check if all data that is needed to build the video is here
-  let code = request.query.code;
-  let email = request.query.email;
-  if (!email) {
-    return response.status(400).send({error: 'missing_email'});
-  } else if (!code) {
-    return response.status(400).send({error: 'missing_code'});
-  }
-
+  var code = request.query.code;
+  var email = request.query.email.toLowerCase();
   var status = scheduler.status(code);
   if (status.request) {
     // If the request is already being processed add the user to the mailing
@@ -86,15 +82,9 @@ app.get('/video-request', function (request, response) {
     return response.send({queue: status.queue});
   }
 
-  // If the file already exists, send its URL
-  if (Utils.fileExists(`./dist/videos/${code}.mp4`)) {
-    logger(`${code} already rendered`);
-    return response.send({url: `${Config.BASE_URL}/${code}.mp4`});
-  }
-
   scheduler.add({code: code, emails: [email]});
   return response.send({queue: status.queue});
-});
+}.request().authenticated().has('code', 'email'));
 
 var port = parseInt(process.argv[2] || 1994);
 var server = app.listen(port, function() {
