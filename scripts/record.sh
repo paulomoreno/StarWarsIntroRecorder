@@ -54,6 +54,9 @@ ffmpeg -i $RENDERING_DIR/$1-intro.mp4 -i $RENDERING_DIR/$1-logo.mp4 -i $RENDERIN
 # Add audio
 ffmpeg -i $RENDERING_DIR/$1-combined.mp4 -i assets/audio/intro.mp3 -c copy -map 0:0 -map 1:0 $RENDERING_DIR/$1-final.mp4
 
+# Create iOS video (h264/AAC)
+ffmpeg -i $RENDERING_DIR/$1-combined.mp4 -i assets/audio/intro.m4a -c copy -map 0:0 -map 1:0 $RENDERING_DIR/$1-final-ios.mp4
+
 # Move the file to the video directory
 mv $RENDERING_DIR/$1-final.mp4 $VIDEO_DIR/$1.mp4
 
