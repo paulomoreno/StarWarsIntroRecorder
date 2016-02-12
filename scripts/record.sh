@@ -60,6 +60,9 @@ ffmpeg -i $RENDERING_DIR/$1-combined.mp4 -i assets/audio/intro.m4a -c copy -map 
 # Move the file to the video directory
 mv $RENDERING_DIR/$1-final.mp4 $VIDEO_DIR/$1.mp4
 
+# Move the iOS file to the video directory
+mv $RENDERING_DIR/$1-final-ios.mp4 $VIDEO_DIR/$1-ios.mp4
+
 # Remove all screenshots and rendering leftovers
 rm $RENDERING_DIR/$1* $SCREENSHOT_DIR/$1*
 set -v
